@@ -1,207 +1,228 @@
-const API_KEY = "AIzaSyCVwKurSR0Sb346-lhcAH2sPzjzp01t-cU";
+const API_KEY = "AIzaSyDH0cbvLDsgbisRlO9XL_lVP89s9zwhzpc";
 const BASE_URL = "https://www.googleapis.com/youtube/v3";
 
+/*
+    {
+        "kind": "youtube#searchListResponse",
+        "etag": "Y11Y-7jglo5h1BCzYMK5QxcqO3g",
+        "nextPageToken": "CAIQAA",
+        "regionCode": "IN",
+        "pageInfo": {
+            "totalResults": 1000000,
+            "resultsPerPage": 2
+    },
+    "items": [
+    {
+    "kind": "youtube#searchResult",
+    "etag": "cbrNHcDxZC5CIbxXgUeBFqGzQ2w",
+    "id": {
+        "kind": "youtube#channel",
+        "channelId": "UCt2JXOLNxqry7B_4rRZME3Q"
+    },
+    "snippet": {
+        "publishedAt": "2012-08-03T08:37:23Z",
+        "channelId": "UCt2JXOLNxqry7B_4rRZME3Q",
+        "title": "ICC",
+        "description": "This is the official ICC YouTube channel. The ICC is the governing body of international cricket. Our Vision of Success As a ...",
+        "thumbnails": {
+        "default": {
+            "url": "https://yt3.ggpht.com/3K6h6gpMPf4mK9qh6SXTl0W3PLxnOMzUnFHc2lbS9t-ucS-b4JGcR8nW7ja9XDYkHM-kAnijk2c=s88-c-k-c0xffffffff-no-rj-mo"
+        },
+        "medium": {
+            "url": "https://yt3.ggpht.com/3K6h6gpMPf4mK9qh6SXTl0W3PLxnOMzUnFHc2lbS9t-ucS-b4JGcR8nW7ja9XDYkHM-kAnijk2c=s240-c-k-c0xffffffff-no-rj-mo"
+        },
+        "high": {
+            "url": "https://yt3.ggpht.com/3K6h6gpMPf4mK9qh6SXTl0W3PLxnOMzUnFHc2lbS9t-ucS-b4JGcR8nW7ja9XDYkHM-kAnijk2c=s800-c-k-c0xffffffff-no-rj-mo"
+        }
+        },
+        "channelTitle": "ICC",
+        "liveBroadcastContent": "upcoming",
+        "publishTime": "2012-08-03T08:37:23Z"
+    }
+    }
+    ]
+    }
+*/
 
-async function fetchData(searchQuery, maxItems) {
-   let response = await fetch(`${BASE_URL}/search?key=${API_KEY}&q=${searchQuery}&maxResults=${maxItems}&part=snippet`);
-//   console.log(response);
-  // let response = await fetch("./dummy.json");
-  let data = await response.json();
+// console.log('rishi');
 
-  let arr = data.items;
-  // console.log(arr);
 
-  // getVideoInfo('JhIBqykjzbs');
+// --------------------------------------------------------------------------------------------------
 
-  displayCards(arr,scrollableRightSections);
+// Getting first page videos:-
+async function fetchVideos(searchQuery, maxResults) {
+  const response = await fetch(
+    `${BASE_URL}/search?key=${API_KEY}&q=${searchQuery}&maxResults=${maxResults}&part=snippet`
+  );
+  const data = await response.json();
+  // console.log(data.items);
+  videoList(data.items)
 }
 
-window.addEventListener('load',() => {
-    fetchData("" ,12);
+
+const videos = document.getElementById('videos')
+const searchInput = document.getElementById('searchInput')
+const searchBtn = document.getElementById('searchBtn')
+
+
+async function videoList(arrayOfVideos){
+  // console.log(arrayOfVideos);
+  videos.innerHTML = ""
+  processVideos(arrayOfVideos);
+ 
+  // arrayOfVideos.forEach (element => {
+  //   // console.log(element.snippet.channelId);
+
+  //   let channelLogo = await getChannelLogo(element.snippet.channelId);
+
+  //   let card = document.createElement('div')
+  //   card.id = 'card';
+  //   card.innerHTML = `
+  //   <div><img class="thumbnail" src="${element.snippet.thumbnails.medium.url}" width="${element.snippet.thumbnails.medium.width}px" height="${element.snippet.thumbnails.medium.height}px" alt="thumbnail"></div>
+                
+  //   <div class="card-Bottom">
+  //       <div class="logo">
+  //           <img src="${getChannelLogo(element.snippet.channelId)}" alt="logo">
+  //       </div>
+        
+  //       <div class="p-tags">
+  //           <p>${element.snippet.title}</p>
+  //           <p>${element.snippet.channelTitle}</p>
+  //           <p>${viewCount(getVideoStats(element.id.videoId))}views . ${timeCount(element.snippet.publishTime)}</p>
+  //       </div>
+  //   </div>
+  //   `
+  //   videos.appendChild(card);
+
+  //   card.addEventListener('click',(e)=>{
+  //     console.log(element.id.videoId);
+  //     sessionStorage.setItem("videoIdIs", element.id.videoId);
+  //     window.location.href = 'index2.html';
+  //   })
+
+  //   // getVideoStats(`${element.id.videoId}`)
+  // });
+  
+  async function processVideos(arrayOfVideos) {
+    for (const element of arrayOfVideos) {
+      try {
+        let channelLogo = await getChannelLogo(element.snippet.channelId);
+
+        let videoStats = await getVideoStats(element.id.videoId); // Assuming getVideoStats is an async function
+        let viewsPerVideo = await viewCount(videoStats);
+  
+        let card = document.createElement('div');
+        card.id = 'card';
+        card.innerHTML = `
+          <div><img class="thumbnail" src="${element.snippet.thumbnails.medium.url}" width="${element.snippet.thumbnails.medium.width}px" height="${element.snippet.thumbnails.medium.height}px" alt="thumbnail"></div>
+                      
+          <div class="card-Bottom">
+              <div class="logo">
+                  <img src="${channelLogo}" alt="logo"> <!-- Use the channelLogo variable here -->
+              </div>
+              
+              <div class="p-tags">
+                  <p>${element.snippet.title}</p>
+                  <p>${element.snippet.channelTitle}</p>
+                  <p>${viewsPerVideo} views . ${timeCount(element.snippet.publishTime)}</p>
+              </div>
+          </div>
+        `;
+        videos.appendChild(card);
+  
+        card.addEventListener('click', (e) => {
+          console.log(element.id.videoId);
+          sessionStorage.setItem("videoIdIs", element.id.videoId);
+          window.location.href = 'index2.html';
+        });
+      } catch (error) {
+        console.error(error);
+      }
+    }
+  }
+}
+
+async function viewCount(count){
+  if(count > 1000000){
+    let million = await count/1000000;
+    return Math.ceil(million) + 'M';
+  }else{
+    let thounsand = await count/1000
+    return  Math.ceil(thounsand) + 'K';
+  }
+}
+
+function timeCount(publishTime) {
+  let publishDate = new Date(publishTime);
+  let currentDate = new Date();
+
+  let secondsGap = (currentDate.getTime() - publishDate.getTime()) / 1000;
+
+  const secondsPerDay = 24 * 60 * 60;
+  const secondsPerWeek = 7 * secondsPerDay;
+  const secondsPerMonth = 30 * secondsPerDay;
+  const secondsPerYear = 365 * secondsPerDay;
+
+  if (secondsGap < secondsPerDay) {
+    return `${Math.ceil(secondsGap / (60 * 60))} hrs ago`;
+  }
+  if (secondsGap < secondsPerWeek) {
+    return `${Math.ceil(secondsGap / secondsPerWeek)} weeks ago`;
+  }
+  if (secondsGap < secondsPerMonth) {
+    return `${Math.ceil(secondsGap / secondsPerMonth)} months ago`;
+  }
+
+  return `${Math.ceil(secondsGap / secondsPerYear)} years ago`;
+}
+
+// fetchVideos('',20)
+
+if(searchInput.value == ''){
+  fetchVideos('',20)
+}
+
+searchBtn.addEventListener('click',()=>{
+  if(searchInput.value !== ''){
+    let searchResult = searchInput.value;
+    fetchVideos(searchResult + '',20)
+  }
 })
 
-searchDiv.addEventListener("click", () => {
-  // console.log(searchInput.value);
-  let Value = searchInput.value;
-  // console.log(searchInput.value);
-  fetchData(Value, 12);
 
-  searchInput.value = "";
-});
+// --------------------------------------------------------------------------------------------------
 
-async function getVideoInfo(videoId) {
-  let response = await fetch(`${BASE_URL}/videos?key=${API_KEY}&part=statistics&id=${videoId}`);
-  // let response = await fetch("./videoInfoDummy.json");
-  let data = await response.json();
-  return data.items;
-  // let videoInfo = data.items;
-  // console.log(videoInfo);
+// Getting video statistics:-
+
+async function getVideoStats(videoId){
+    const response = await fetch(`${BASE_URL}/videos?key=${API_KEY}&part=statistics&id=${videoId}`);
+    const data = await response.json();
+    // console.log(data);
+    return data.items[0].statistics.viewCount
 }
+// getVideoStats('JhIBqykjzbs')
 
-// getVideoInfo('JhIBqykjzbs');
 
-async function getChannelLogo(channelId) {
-  const response = await fetch(`${BASE_URL}/channels?key=${API_KEY}&part=snippet&id=${channelId}`);
-  // let response = await fetch("./channelLogodummy.json");
-  const data = await response.json();
 
-  return data.items;
+// --------------------------------------------------------------------------------------------------
+
+
+// Getting channel information:-
+async function getChannelLogo(channelId){
+    const response = await fetch(`${BASE_URL}/channels?key=${API_KEY}&part=snippet&id=${channelId}`);
+    const data = await response.json();
+    console.log(data.items[0].snippet.thumbnails.default.url);
+
+    let logoURL = data.items[0].snippet.thumbnails.default.url
+
+    return logoURL
+
 }
-// getChannelLogo('UCt2JXOLNxqry7B_4rRZME3Q');
-
-// get no of subscribers
-
-async function getSubscription(channelid) {
-  // console.log(channelid);
-
-  let response = await fetch(`${BASE_URL}/channels?key=${API_KEY}&id=${channelid}&part=statistics`);
-
-  // let response = await fetch("./subscribers.json");
-
-  let data = await response.json();
-  return data.items;
-}
-
-async function displayCards(data,displayBody) {
-
-  console.log("kriika");
-  displayBody.innerHTML = "";
-  for (const ele of data) {
-    //  console.log(ele);
-
-    let viewCountObj = await getVideoInfo(ele.id.videoId);
-    //    console.log(viewCountObj);
-    ele.viewObject = viewCountObj; // enjected array as object in ele object
-
-    let channelInfoObject = await getChannelLogo(ele.snippet.channelId);
-    //    console.log(channelInfoObject);
-    ele.channelObject = channelInfoObject;
-
-    let subscribers = await getSubscription(ele.snippet.channelId);
-
-    ele.subscriberCount = subscribers;
-
-    //    console.log(ele.subscriberCount[0].statistics.subscriberCount);
-
-    let displayDuration = calDuration(ele.snippet.publishedAt);
-
-    let videoCard = document.createElement("a");
-
-    videoCard.className = "videoCard";
-    videoCard.href = `./selectedVideo.html?videoId=${ele.id.videoId}`;
-    // console.log(ele.id.videoId);
-
-    // creating session storage
-    videoCard.addEventListener("click", () => {
-      const InfoSelectedVideo = {
-        videoTitle: `${ele.snippet.title}`,
-        channelLogo: `${ele.channelObject[0].snippet.thumbnails.high.url}`,
-        channelName: `${ele.snippet.channelTitle}`,
-        likeCount: `${ele.viewObject[0].statistics.viewCount}`,
-        channelID: `${ele.snippet.channelId}`,
-        subscribers: `${ele.subscriberCount[0].statistics.subscriberCount}`,
-      };
-      sessionStorage.setItem(
-        "selectedVideoInformation",
-        JSON.stringify(InfoSelectedVideo)
-      );
-    });
-
-    videoCard.innerHTML = `<img src="${ele.snippet.thumbnails.high.url}">
-        <div class="channel">
-            <img src="${ele.channelObject[0].snippet.thumbnails.high.url}" >
-            <h4>${ele.snippet.title}</h4>
-        </div>
-        <div class="channelInfo">
-            <p>${ele.snippet.channelTitle}</p>
-            <p> ${calculateViews(
-              ele.viewObject[0].statistics.viewCount
-            )} views , ${displayDuration} ago </p>
-        </div>`;
-
-        displayBody.appendChild(videoCard);
-  }
-}
-
-// cal duration
-
-function calDuration(publisedDate) {
-  let displayTime;
-  let publisedAt = new Date(publisedDate);
-  let MiliSecFromPublised = publisedAt.getTime();
-
-  let currentTime = new Date();
-
-  let currentTimeInMiliSec = currentTime.getTime();
-
-  let duration = currentTimeInMiliSec - MiliSecFromPublised;
-
-  let days = parseInt(duration / 86400000);
-
-  if (days < 1) {
-    let hours = parseInt(duration / 3600000);
-    displayTime = hours + " " + "hours";
-  } else if (days > 6 && days <= 29) {
-    let weeks = parseInt(days / 7);
-    displayTime = weeks + " " + "weeks";
-  } else if (days > 29 && days <= 364) {
-    let months = parseInt(days / 30);
-    displayTime = months + " " + "months";
-  } else if (days > 364) {
-    let years = parseInt(days / 365);
-    displayTime = years + " " + "years";
-  } else {
-    displayTime = days + " " + "days";
-  }
-
-  return displayTime;
-}
-
-// cal views
-
-function calculateViews(viewCount) {
-  let displayViews;
-  let count;
-  if (viewCount < 1000) {
-    displayViews = viewCount;
-  } else if (viewCount >= 1000 && viewCount <= 999999) {
-    displayViews = (viewCount / 1000).toFixed(1) + " " + "K";
-  } else if (viewCount >= 1000000) {
-    displayViews = (viewCount / 1000000).toFixed(1) + " " + "M";
-  }
-
-  return displayViews;
-}
-// toggle in menues
-
-let menuButton = document.getElementById("menubar");
-console.log(menuButton);
-
-menuButton.addEventListener('click', showSmallMenuOptions);
-// 
-
-function showSmallMenuOptions (){
-
-  let menuCards = document.getElementsByClassName("mo");
+// getChannelLogo('UCaAhYJbOJcs_CJ0IAtPOUgw')
+// --------------------------------------------------------------------------------------------------
 
 
-  // console.log(menuCards);
 
-  for(let menu of menuCards){
-    if(menu.classList.contains("menuCards")){
-      menu.classList.remove("menuCards");
-      menu.classList.add("MENUCARDS");
-      leftSection.style.flex=1.5;
-      copyRightSystem.style.display="block";
-    }
-    else{
-      
 
-      menu.classList.remove("MENUCARDS");
-      menu.classList.add("menuCards");
-      leftSection.style.flex=.5;
-      copyRightSystem.style.display="none";
-      
-    }
-  }
-}
+//==================================================================================================
+
